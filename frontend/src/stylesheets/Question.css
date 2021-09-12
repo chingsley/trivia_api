@@ -15,6 +15,7 @@
 .questions-list {
   flex-basis: 75%;
   text-align: center;
+  margin-bottom: 4rem;
 }
 
 .Question-holder {
@@ -53,10 +54,16 @@
   margin-left: 0px !important;
 }
 
+.pagination-menu {
+  /* border: 1px solid red; */
+}
+
 span.page-num {
+  /* border: 1px solid blue; */
   margin: 5px;
-  padding-bottom: 50px;
-  /* color: blue; */
+  padding: 0.2rem;
+  cursor: pointer;
+  display: inline-block;
   font-weight: bolder;
   text-decoration: underline;
   font-size: 16px;
@@ -64,6 +71,9 @@ span.page-num {
 
 span.page-num.active {
   color: blue;
+}
+span.page-num:hover {
+  /* color: red; */
 }
 
 img.category {

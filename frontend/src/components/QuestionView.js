@@ -23,9 +23,10 @@ class QuestionView extends Component {
 
   getQuestions = () => {
     $.ajax({
-      url: `/questions?page=${this.state.page}`, //TODO: update request URL
+      url: `/questions?page=${this.state.page - 1}`, ///NOTE: Page numbering is 0 indexed in the backend, so we subtract 1
       type: "GET",
       success: (result) => {
+        // console.log({ result, page: this.state.page });
         this.setState({
           questions: result.questions,
           totalQuestions: result.total_questions,
@@ -42,6 +43,7 @@ class QuestionView extends Component {
   };
 
   selectPage(num) {
+    // console.log({ num });
     this.setState({ page: num }, () => this.getQuestions());
   }
 
@@ -139,7 +141,7 @@ class QuestionView extends Component {
             Categories
           </h2>
           <ul>
-            {console.log(this.state)}
+            {/* {console.log(this.state)} */}
             {Object.keys(this.state.categories).map((id) => (
               <li
                 key={id}
