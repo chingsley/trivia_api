@@ -1,10 +1,21 @@
 from models import setup_db, Question, Category
 import os
-from flask import Flask, request, abort, jsonify
+from flask import Flask, request, abort, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from helpers import paginate_data, format_query_result
 import random
+
+
+class APIError(Exception):
+    """All custom API Exceptions"""
+    pass
+
+
+class InternalServerError(APIError):
+    """Custom Authentication Error Class."""
+    code = 500
+    description = "Internal Servier Error"
 
 
 def create_app(test_config=None):
@@ -84,6 +95,32 @@ def create_app(test_config=None):
   TEST: When you click the trash icon next to a question, the question will be removed.
   This removal will persist in the database and when you refresh the page.
   '''
+    @app.route("/questions/<int:question_id>", methods=["DELETE"])
+    def delete_question(question_id):
+        try:
+            question = Question.query.filter(
+                Question.id == question_id).one_or_none()
+
+            if question is None:
+                print("no question found")
+                return make_response(jsonify({"error": f"No question matches the id of {question_id}"}), 404)
+
+            question.delete()
+            selection = Question.query.order_by(Question.id).all()
+            current_questions = paginate_data(request, selection)
+
+            return jsonify(
+                {
+                    "success": True,
+                    "deleted": question_id,
+                    "questions": current_questions,
+                    "total_questions": len(Question.query.all()),
+                }
+            )
+
+        except:
+            raise InternalServerError('Internal servier error')
+            # abort(422)
 
     '''
   @TODO:
@@ -161,5 +198,11 @@ def create_app(test_config=None):
   Create error handlers for all expected errors
   including 404 and 422.
   '''
-
+    @app.errorhandler(InternalServerError)
+    def handle_exception(err):
+        """Return JSON instead of HTML for any other server error"""
+        app.logger.error(f"Unknown Exception: {str(err)}")
+        response = {
+            "error": f"{str(err)}"}
+        return jsonify(response), 500
     return app
