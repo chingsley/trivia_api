@@ -8,6 +8,20 @@
   flex-shrink: 2;
 }
 
+.category {
+  /* border: 1px solid blue;
+   */
+  cursor: pointer;
+}
+
+/* img.category {
+  width: 30px;
+} */
+
+img.category-icon {
+  width: 30px;
+}
+
 .categories-list > form {
   width: 60%;
 }
@@ -76,10 +90,7 @@ span.page-num:hover {
   /* color: red; */
 }
 
-img.category {
-  width: 30px;
-}
-
 img.delete {
   width: 20px;
+  cursor: pointer;
 }
