@@ -1,21 +1,22 @@
 from models import setup_db, Question, Category
 import os
-from flask import Flask, request, abort, jsonify, make_response
+from flask import Flask, request, abort, jsonify, make_response, json
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from helpers import paginate_data, format_query_result
+from werkzeug.exceptions import HTTPException, InternalServerError
 import random
 
 
-class APIError(Exception):
-    """All custom API Exceptions"""
-    pass
+# class APIError(Exception):
+#     """All custom API Exceptions"""
+#     pass
 
 
-class InternalServerError(APIError):
-    """Custom Authentication Error Class."""
-    code = 500
-    description = "Internal Servier Error"
+# class InternalServerError(APIError):
+#     """Custom Authentication Error Class."""
+#     code = 500
+#     description = "Internal Servier Error"
 
 
 def create_app(test_config=None):
@@ -74,19 +75,23 @@ def create_app(test_config=None):
   '''
     @app.route('/questions')
     def get_questions():
-        questions = Question.query.order_by(Question.id).all()
-        categories = Category.query.order_by(Category.id).all()
-        cats = {}
-        for row in format_query_result(categories):
-            cats[row['id']] = row['type']
+        try:
+            questions = Question.query.order_by(Question.id).all()
+            categories = Category.query.order_by(Category.id).all()
+            cats = {}
+            for row in format_query_result(categories):
+                cats[row['id']] = row['type']
 
-        return jsonify({
-            'success': True,
-            'questions': paginate_data(request, questions),
-            'total_questions': len(questions),
-            'categories': cats,
-            'current_category': 'some value'
-        })
+            return jsonify({
+                'success': True,
+                'questions': paginate_data(request, questions),
+                'total_questions': len(questions),
+                'categories': cats,
+                'current_category': 'some value'
+            })
+        except Exception as e:
+            print('error: ', str(e))
+            raise InternalServerError(str(e))
 
     '''
   @TODO:
@@ -118,9 +123,9 @@ def create_app(test_config=None):
                 }
             )
 
-        except:
-            raise InternalServerError('Internal servier error')
-            # abort(422)
+        except Exception as e:
+            print('error: ', str(e))
+            raise InternalServerError(str(e))
 
     '''
   @TODO:
@@ -158,8 +163,9 @@ def create_app(test_config=None):
                 }
             )
 
-        except:
-            abort(422)
+        except Exception as e:
+            print('error: ', str(e))
+            raise InternalServerError(str(e))
 
     '''
   @TODO:
@@ -180,6 +186,23 @@ def create_app(test_config=None):
   categories in the left column will cause only questions of that
   category to be shown.
   '''
+    @app.route("/categories/<int:category_id>/questions")
+    def get_questions_by_category_id(category_id):
+        try:
+            selection = Question.query.filter(
+                Question.category == str(category_id)).all()
+
+            return jsonify(
+                {
+                    "success": True,
+                    "questions": paginate_data(request, selection),
+                    "total_questions": len(selection),
+                }
+            )
+
+        except Exception as e:
+            print('error: ', str(e))
+            raise InternalServerError(str(e))
 
     '''
   @TODO:
@@ -199,10 +222,17 @@ def create_app(test_config=None):
   including 404 and 422.
   '''
     @app.errorhandler(InternalServerError)
-    def handle_exception(err):
-        """Return JSON instead of HTML for any other server error"""
-        app.logger.error(f"Unknown Exception: {str(err)}")
-        response = {
-            "error": f"{str(err)}"}
-        return jsonify(response), 500
+    def handle_exception(e):
+        """Return JSON instead of HTML for HTTP errors."""
+        # start with the correct headers and status code from the error
+        response = e.get_response()
+        # replace the body with JSON
+        response.data = json.dumps({
+            "code": e.code,
+            "name": e.name,
+            "description": e.description,
+        })
+        response.content_type = "application/json"
+        return response
+
     return app
