@@ -76,7 +76,14 @@ def create_app(test_config=None):
     @app.route('/questions')
     def get_questions():
         try:
-            questions = Question.query.order_by(Question.id).all()
+            search_by = request.args.get('search_by')
+            questions = []
+            if search_by:
+                questions = Question.query.order_by(Question.id).filter(
+                    Question.question.ilike("%{}%".format(search_by))
+                ).all()
+            else:
+                questions = Question.query.order_by(Question.id).all()
             categories = Category.query.order_by(Category.id).all()
             cats = {}
             for row in format_query_result(categories):
@@ -169,7 +176,7 @@ def create_app(test_config=None):
 
     '''
   @TODO:
-  Create a POST endpoint to get questions based on a search term.
+  Create a GET endpoint to get questions based on a search term.
   It should return any questions for whom the search term
   is a substring of the question.
 
